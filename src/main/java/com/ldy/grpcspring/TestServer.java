@@ -27,6 +27,7 @@ public class TestServer {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                // 在这里使用stderr，因为记录器可能已被其JVM关闭钩子重置了
                 System.err.println("------shutting down gRPC server since JVM is shutting down-------");
                 TestServer.this.stop();
                 System.err.println("------server shut down------");
@@ -50,7 +51,7 @@ public class TestServer {
     //实现服务接口的类
     private class GreeterImpl extends GreeterGrpc.GreeterImplBase {
         public void testSomeThing(TestRequest request, StreamObserver<TestResponse> responseObserver) {
-            TestResponse build = TestResponse.newBuilder().setMessage(request.getName()).build();
+            TestResponse build = TestResponse.newBuilder().setMessage("Hello " + request.getName()).build();
             //onNext()方法向客户端返回结果
             responseObserver.onNext(build);
             //告诉客户端这次调用已经完成
@@ -61,7 +62,7 @@ public class TestServer {
     public static void main(String[] args) throws IOException, InterruptedException {
         final  TestServer server=new TestServer();
         server.start();
-        server.blockUntilShutdown();
+        server.blockUntilShutdown();    //先启动服务,然后等待终止(期间客户端开启访问)
     }
 
 }
